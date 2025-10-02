@@ -1,20 +1,59 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import 'react-native-gesture-handler';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function App() {
+// Import your screens
+import SignUpScreen from './screens/auth/SignUpScreen';
+import SignInScreen from './screens/auth/SignInScreen'; // <-- IMPORT SIGN IN
+import FeedScreen from './screens/FeedScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import CreatePostScreen from './screens/CreatePostScreen';
+import Colors from './constant/colors';
+
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+function MainAppTabs() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: Colors.PRIMARY,
+        tabBarInactiveTintColor: Colors.GRAY,
+        tabBarIcon: ({ color, size }) => {
+          let iconName;
+          if (route.name === 'Feed') {
+            iconName = 'newspaper-outline';
+          } else if (route.name === 'Profile') {
+            iconName = 'person-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Feed" component={FeedScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="SignIn" component={SignInScreen} />
+        <Stack.Screen name="SignUp" component={SignUpScreen} />
+        <Stack.Screen name="MainApp" component={MainAppTabs} />
+        {/* ADD THIS SCREEN TO THE STACK */}
+        <Stack.Screen 
+          name="CreatePost" 
+          component={CreatePostScreen} 
+          options={{ presentation: 'modal' }} // Opens as a slide-up modal
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
