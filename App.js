@@ -12,6 +12,7 @@ import FeedScreen from './screens/FeedScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import CreatePostScreen from './screens/CreatePostScreen';
 import Colors from './constant/colors';
+import { AuthProvider } from './context/AuthContext';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -42,18 +43,19 @@ function MainAppTabs() {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="SignIn" component={SignInScreen} />
-        <Stack.Screen name="SignUp" component={SignUpScreen} />
-        <Stack.Screen name="MainApp" component={MainAppTabs} />
-        {/* ADD THIS SCREEN TO THE STACK */}
-        <Stack.Screen 
-          name="CreatePost" 
-          component={CreatePostScreen} 
-          options={{ presentation: 'modal' }} // Opens as a slide-up modal
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthProvider> {/* <-- WRAP EVERYTHING */}
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="SignIn" component={SignInScreen} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} />
+          <Stack.Screen name="MainApp" component={MainAppTabs} />
+          <Stack.Screen
+            name="CreatePost"
+            component={CreatePostScreen}
+            options={{ presentation: 'modal' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
   );
 }

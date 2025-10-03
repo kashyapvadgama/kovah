@@ -7,51 +7,44 @@ import { useNavigation } from '@react-navigation/native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Colors from '../../constant/colors';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // <-- IMPORT ASYNCSTORAGE
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiClient from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 
-const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3001' : 'http://172.20.10.9:3001';
 
 const SignInScreen = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth();
 
-  // ... (validationSchema remains the same)
+  const validationSchema = Yup.object().shape({
+    email: Yup.string().email('Invalid email address').required('Email is required'),
+    password: Yup.string().required('Password is required'),
+  });
 
-  const handleSignIn = async (values: any) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/api/auth/signin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
+    const handleSignIn = async (values: any) => {
+        setLoading(true);
+        try {
+          const data = await apiClient('/api/auth/signin', {
+            method: 'POST',
+            body: JSON.stringify(values),
+          });
+          
+          // Use the context to set the token and user data globally
+          await signIn(data.token, data.user);
+          
+          // No need for an alert now, just navigate
+          // @ts-ignore
+          navigation.replace('MainApp');
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Sign in failed');
-      }
-      
-      // --- ADD THIS BLOCK TO SAVE THE TOKEN ---
-      if (data.token) {
-        await AsyncStorage.setItem('userToken', data.token);
-        console.log('Token saved to AsyncStorage!');
-      }
-      // ------------------------------------
+        } catch (error: any) {
+          Alert.alert('Sign In Failed', error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-      Alert.alert('Success!', 'You are now signed in.', [
-        // @ts-ignore
-        { text: 'OK', onPress: () => navigation.replace('MainApp') }
-      ]);
-
-    } catch (error: any) {
-      Alert.alert('Sign In Failed', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ... (the rest of the JSX and styles remain the same)
-  // ...
+  // The JSX and styles below remain the same...
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -63,10 +56,7 @@ const SignInScreen = () => {
           <Text style={styles.subtitle}>Sign in to your Kovah account.</Text>
           <Formik
             initialValues={{ email: '', password: '' }}
-            validationSchema={Yup.object().shape({
-              email: Yup.string().email('Invalid email address').required('Email is required'),
-              password: Yup.string().required('Password is required'),
-            })}
+            validationSchema={validationSchema}
             onSubmit={handleSignIn}
           >
             {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
@@ -112,6 +102,7 @@ const SignInScreen = () => {
     </SafeAreaView>
   );
 };
+// Styles remain the same
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
